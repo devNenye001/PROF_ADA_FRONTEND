@@ -1,0 +1,336 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Design Tokens - Dark Theme (Default) */
+:root {
+  --color-bg-primary: #030303;
+  --color-bg-secondary: #0b0c10;
+  
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #4b5563;
+  
+  --color-glass: rgba(10, 11, 16, 0.45);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-border-hover: rgba(255, 255, 255, 0.16);
+  --color-glass-shadow: rgba(0, 0, 0, 0.85);
+  
+  --color-purple-glow: rgba(249, 115, 22, 0.25); /* warm orange glow */
+  --color-blue-glow: rgba(245, 158, 11, 0.18); /* amber glow */
+  --color-cyan-glow: rgba(239, 68, 68, 0.14); /* red-orange glow */
+  --color-silver-glow: rgba(192, 192, 192, 0.08);
+  
+  --color-primary: #f97316; /* orange-500 */
+  --color-primary-hover: #fb923c; /* orange-400 */
+  --color-primary-glow: rgba(249, 115, 22, 0.15);
+  --color-accent-cyan: #eab308; /* yellow-500 */
+  --color-accent-cyan-hover: #facc15;
+  --color-danger: #ef4444;
+  --color-danger-hover: #f87171;
+  --color-danger-glow: rgba(239, 68, 68, 0.15);
+
+  --glass-blur: 24px;
+}
+
+/* Design Tokens - Light Theme (Warm Peach & Soft Amber accents) */
+.light {
+  --color-bg-primary: #fdfdfd; /* warm paper white */
+  --color-bg-secondary: #ffffff;
+  
+  --color-text-primary: #0f172a; /* slate-900 */
+  --color-text-secondary: #334155; /* slate-700 */
+  --color-text-muted: #64748b; /* slate-500 */
+  
+  --color-glass: rgba(255, 255, 255, 0.75);
+  --color-glass-border: rgba(0, 0, 0, 0.06);
+  --color-glass-border-hover: rgba(0, 0, 0, 0.12);
+  --color-glass-shadow: rgba(249, 115, 22, 0.03);
+  
+  --color-purple-glow: rgba(254, 215, 170, 0.35); /* soft orange-peach */
+  --color-blue-glow: rgba(253, 237, 201, 0.3); /* soft yellow-amber */
+  --color-cyan-glow: rgba(254, 226, 226, 0.25); /* soft peach-red */
+  --color-silver-glow: rgba(241, 245, 249, 0.4);
+  
+  --color-primary: #ea580c; /* orange-600 */
+  --color-primary-hover: #c2410c; /* orange-700 */
+  --color-primary-glow: rgba(234, 88, 12, 0.08);
+  --color-accent-cyan: #d97706; /* amber-600 */
+  --color-accent-cyan-hover: #b45309;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-danger-glow: rgba(220, 38, 38, 0.08);
+
+  --glass-blur: 18px;
+}
+
+* {
+  @apply antialiased;
+}
+
+html,
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  height: 100%;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Heading style & weight configurations - VORA Inspired sleek light/regular scale */
+h1, h2, h3, h4 {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 300 !important; /* light weight font style */
+  letter-spacing: -0.025em;
+}
+
+.font-dm-sans {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#root {
+  @apply h-full w-full;
+}
+
+/* Premium Glassmorphic Panels */
+.glass-panel {
+  background: var(--color-glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(130%);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: 0 8px 32px 0 var(--color-glass-shadow);
+  border-radius: 20px;
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+.glass-panel-interactive {
+  composes: glass-panel;
+}
+.glass-panel-interactive:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--color-glass-border-hover);
+  box-shadow: 0 16px 48px 0 var(--color-glass-shadow), 0 0 20px rgba(249, 115, 22, 0.08);
+  transform: translateY(-4px);
+}
+.light .glass-panel-interactive:hover {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: var(--color-glass-border-hover);
+  box-shadow: 0 16px 48px 0 var(--color-glass-shadow), 0 0 20px rgba(234, 88, 12, 0.06);
+}
+
+/* Starry space background */
+.star-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(1px 1px at 30px 45px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 120px 80px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 70px 180px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 220px 140px, rgba(249,115,22,0.4), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 310px 240px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 280px 60px, rgba(245,158,11,0.4), rgba(0,0,0,0));
+  background-size: 320px 320px;
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.3s;
+}
+.light .star-field {
+  opacity: 0;
+}
+
+/* Cosmic Ring Arc (Vora inspired glowing halo) */
+.cosmic-ring {
+  position: absolute;
+  top: -380px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1300px;
+  height: 600px;
+  border-radius: 50%;
+  border-top: 2px solid rgba(249, 115, 22, 0.35);
+  box-shadow: 0 -20px 80px rgba(249, 115, 22, 0.2), 0 -5px 20px rgba(245, 158, 11, 0.1);
+  pointer-events: none;
+  z-index: 1;
+}
+.light .cosmic-ring {
+  border-top: 2px solid rgba(234, 88, 12, 0.25);
+  box-shadow: 0 -20px 80px rgba(234, 88, 12, 0.08), 0 -5px 20px rgba(217, 119, 6, 0.05);
+}
+
+/* Ambient glow spots */
+.ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  transition: background 0.5s ease, opacity 0.5s ease;
+}
+
+.glow-purple {
+  background: radial-gradient(
+    circle,
+    var(--color-purple-glow) 0%,
+    transparent 70%
+  );
+}
+
+.glow-blue {
+  background: radial-gradient(
+    circle,
+    var(--color-blue-glow) 0%,
+    transparent 70%
+  );
+}
+
+.glow-cyan {
+  background: radial-gradient(
+    circle,
+    var(--color-cyan-glow) 0%,
+    transparent 70%
+  );
+}
+
+.glow-silver {
+  background: radial-gradient(
+    circle,
+    var(--color-silver-glow) 0%,
+    transparent 70%
+  );
+}
+
+/* Morphing Siri Orb (Hello Robin Inspired, Orange Gradient) */
+.siri-orb {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fb923c 0%, #f97316 45%, #ef4444 85%);
+  box-shadow: 
+    0 0 50px rgba(249, 115, 22, 0.4),
+    0 0 100px rgba(239, 68, 68, 0.2),
+    inset 0 0 25px rgba(255, 255, 255, 0.25);
+  filter: blur(1px);
+  animation: morphOrb 8s ease-in-out infinite alternate, spin 20s linear infinite;
+  position: relative;
+}
+.light .siri-orb {
+  background: radial-gradient(circle at 35% 35%, #fed7aa 0%, #ffedd5 45%, #fca5a5 85%);
+  box-shadow: 
+    0 0 40px rgba(249, 115, 22, 0.25),
+    0 0 80px rgba(239, 68, 68, 0.1);
+}
+
+@keyframes morphOrb {
+  0% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  }
+  33% {
+    border-radius: 70% 30% 52% 48% / 60% 40% 60% 40%;
+  }
+  66% {
+    border-radius: 50% 50% 38% 62% / 40% 60% 30% 70%;
+  }
+  100% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  }
+}
+
+/* Custom Interactive Cursor Spotlight (Orange/Amber) */
+.cursor-spotlight {
+  position: fixed;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, rgba(245, 158, 11, 0.04) 50%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(30px);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+}
+.light .cursor-spotlight {
+  background: radial-gradient(circle, rgba(254, 215, 170, 0.15) 0%, rgba(253, 237, 201, 0.08) 50%, transparent 70%);
+}
+
+/* Typography styles */
+.text-gradient-silver {
+  background: linear-gradient(135deg, #111827 0%, #4b5563 50%, #9ca3af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.light .text-gradient-silver {
+  background: linear-gradient(135deg, #111827 0%, #4b5563 50%, #9ca3af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-purple-cyan {
+  background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.light .text-gradient-purple-cyan {
+  background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Smooth transitions */
+.transition-panel {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom Input Styling */
+.form-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text-primary);
+  border-radius: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+.light .form-input {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.form-input:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+  outline: none;
+}
+.light .form-input:focus {
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.18);
+}
