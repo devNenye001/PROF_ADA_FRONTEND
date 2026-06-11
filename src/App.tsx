@@ -26,51 +26,25 @@ export const App: React.FC = () => {
     }
   }, [appState]);
 
-  // Check magic link token on mount
+  // Check if user is already logged in on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    
-    if (token) {
-      setIsVerifying(true);
-      setVerificationError(null);
-      setAppState("auth");
-      
-      api.get(`/auth/email/verify?token=${token}`)
-        .then((res) => {
-          if (res.data.success) {
-            const { user, accessToken, refreshToken } = res.data.data;
-            
-            localStorage.setItem("prof-ada-access-token", accessToken);
-            localStorage.setItem("prof-ada-refresh-token", refreshToken);
-            localStorage.setItem("prof-ada-user-email", user.email);
-            
-            // Clean browser address bar
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            setUserEmail(user.email);
-            localStorage.removeItem("prof-ada-onboarding");
-            setShowOnboarding(true);
-            setAppState("workspace");
-          }
-        })
-        .catch((err) => {
-          console.error("Magic link verification failed:", err);
-          const errMsg = err.response?.data?.error?.message || "This link is invalid or has expired. Please request a new one.";
-          setVerificationError(errMsg);
-        })
-        .finally(() => {
-          setIsVerifying(false);
-        });
-    } else {
-      // Check if user is already logged in
-      const storedEmail = localStorage.getItem("prof-ada-user-email");
-      const accessToken = localStorage.getItem("prof-ada-access-token");
-      if (storedEmail && accessToken) {
-        setUserEmail(storedEmail);
-        setAppState("workspace");
-      }
+    const storedEmail = localStorage.getItem("prof-ada-user-email");
+    const accessToken = localStorage.getItem("prof-ada-access-token");
+    if (storedEmail && accessToken) {
+      setUserEmail(storedEmail);
+      setAppState("workspace");
     }
+  }, []);
+
+  // Listen for logout events from the API client to transition state gracefully without page refresh
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      handleLogout();
+    };
+    window.addEventListener("prof-ada-logout", handleAuthLogout);
+    return () => {
+      window.removeEventListener("prof-ada-logout", handleAuthLogout);
+    };
   }, []);
 
   const handleStartConversation = () => {

@@ -62,8 +62,9 @@ api.interceptors.response.use(
         localStorage.removeItem('prof-ada-user-email');
         localStorage.removeItem('prof-ada-active-conversation-id');
         
-        // Force app reload to landing page
-        window.location.reload();
+        // Dispatch custom event to notify React app instead of hard reload
+        window.dispatchEvent(new Event('prof-ada-logout'));
+        
         return Promise.reject(refreshError);
       }
     }
