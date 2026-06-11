@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ArrowRight, Play, Pause, Upload, FileText, CheckCircle, 
-  AlertTriangle, ShieldAlert, Mic, MessageSquare, ChevronDown, 
+import {
+  ArrowRight, Play, Pause, Upload, FileText, CheckCircle,
+  AlertTriangle, ShieldAlert, Mic, MessageSquare, ChevronDown,
   ChevronUp, Star, HelpCircle, X, Sun, Moon, Laptop, Sparkles, Menu
 } from "lucide-react";
 import { useTheme } from "../utils/theme";
@@ -15,7 +15,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onStartConversation,
 }) => {
   const { theme, setTheme } = useTheme();
-  
+
   // States
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [isVoicePlaying, setIsVoicePlaying] = useState(false);
@@ -55,7 +55,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   return (
     <div className="light bg-slate-50 text-slate-900 min-h-screen relative overflow-x-hidden transition-colors duration-300">
-      
+
       {/* Subtle light background decoration (Vora inspired warm peach & amber) */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute w-[800px] h-[800px] -top-[300px] -left-[200px] bg-orange-100/30 rounded-full blur-3xl" />
@@ -73,7 +73,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Navigation links (VORA inspired thin uppercase style) */}
         <nav className="hidden md:flex items-center gap-8 font-dm-sans text-xs font-normal text-slate-500">
           {navLinks.map((link) => (
-            <a 
+            <a
               key={link.label}
               href={link.href}
               className="hover:text-slate-950 transition-colors relative py-1 group"
@@ -88,7 +88,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="flex items-center gap-3">
           {/* Desktop Button */}
           <div className="hidden md:block">
-            <button 
+            <button
               onClick={onStartConversation}
               className="px-5 py-2.5 rounded-[8px] bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white text-xs font-semibold transition-all shadow-sm active:scale-95"
             >
@@ -97,7 +97,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-slate-950 transition-all"
             aria-label="Toggle Menu"
@@ -118,7 +118,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             >
               <nav className="flex flex-col p-6 gap-4 font-dm-sans text-sm font-normal text-slate-500">
                 {navLinks.map((link) => (
-                  <a 
+                  <a
                     key={link.label}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -146,9 +146,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* HERO SECTION */}
       <section id="home" className="relative z-10 pt-20 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
-        
+
         {/* Title (Sleek light-weight typography matching VORA) */}
-        <motion.h1 
+        <motion.h1
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -158,7 +158,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </motion.h1>
 
         {/* Subtitle */}
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -166,9 +166,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         >
           Your academic supervisor, available whenever you need guidance.
         </motion.p>
-        
+
         {/* Subtext */}
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
@@ -178,7 +178,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </motion.p>
 
         {/* CTA Buttons (Styled with orange gradients) */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -191,7 +191,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>Start a Conversation</span>
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform text-white/95" />
           </button>
-          
+
           <button
             onClick={onStartConversation}
             className="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-semibold text-sm transition-colors flex items-center justify-center gap-2 active:scale-95"
@@ -202,7 +202,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </motion.div>
 
         {/* WORKSPACE PREVIEW MOCKUP PANEL */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
@@ -221,7 +221,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Mockup Workspace */}
           <div className="grid grid-cols-1 md:grid-cols-12 h-[340px] md:h-[420px] bg-white text-left text-slate-800">
-            
+
             {/* Sidebar list */}
             <div className="md:col-span-3 border-r border-slate-100 p-4 space-y-4 hidden md:block bg-slate-50/50 h-full">
               <div className="h-5 w-24 bg-slate-200 rounded" />
@@ -246,7 +246,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span className="text-orange-600 font-bold block mb-1">Prof. Ada • Supervisor</span>
                   "I reviewed Section 3.2. Your sample size (N=45) is insufficient for a quantitative survey. However, if you convert this into a mixed-methods case study, N=45 is acceptable. Let's adjust the thesis scope."
                 </div>
-                
+
                 <div className="p-3 bg-orange-50/50 border border-orange-100 rounded-lg text-[11px] leading-relaxed text-slate-700 ml-6 text-right">
                   "That makes sense. Should I rewrite the sample description and add interview guides?"
                 </div>
@@ -266,7 +266,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Document highlights preview */}
             <div className="md:col-span-4 p-4 space-y-3 bg-slate-50/30 h-full hidden md:block">
               <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block">Supervisor Observations</span>
-              
+
               <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] leading-relaxed space-y-1">
                 <div className="flex items-center gap-1.5 text-amber-700 font-bold">
                   <AlertTriangle size={12} />
@@ -296,7 +296,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* DEFINITION SECTION: WHAT PROF. ADA ACTUALLY IS */}
       <section className="relative z-10 py-16 px-6 max-w-4xl mx-auto border-t border-slate-200 text-center space-y-6">
         <h2 className="text-2xl sm:text-3xl font-light text-slate-900 tracking-tight">What Prof. Ada Actually Is</h2>
-        
+
         <p className="text-base sm:text-lg text-slate-700 leading-relaxed font-light">
           Prof. Ada is an <strong>AI-powered academic supervisor</strong> that helps university students at any stage of their project journey—from choosing a topic and identifying research gaps to reviewing chapters and improving slides—through natural conversations, document analysis, and practical supervisor-style guidance in a modern workspace.
         </p>
@@ -319,7 +319,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* PROBLEM SECTION */}
       <section className="relative z-10 py-20 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        
+
         {/* Left Side text */}
         <div className="lg:col-span-5 space-y-6 text-left">
           <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center">
@@ -342,7 +342,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             { title: "Presentation Flow Issues", desc: "Struggling to design slides and maintain proper academic continuity during presentations." }
           ].map((item, i) => (
             <div key={i} className="p-6 bg-white border border-slate-200/60 rounded-lg shadow-sm hover:shadow-md hover:border-orange-200/50 transition-all text-left flex flex-col justify-between relative min-h-[140px] group">
-              <span className="absolute top-4 right-5 font-dm-sans text-[10px] font-light text-slate-400 tracking-wider">0{i+1}</span>
+              <span className="absolute top-4 right-5 font-dm-sans text-[10px] font-light text-slate-400 tracking-wider">0{i + 1}</span>
               <div className="space-y-2 pr-6">
                 <h3 className="font-dm-sans text-xs font-normal text-slate-900 tracking-wide">{item.title}</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed font-light">{item.desc}</p>
@@ -356,7 +356,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* SOLUTION SECTION */}
       <section className="relative z-10 py-20 px-6 bg-slate-50 border-y border-slate-200">
         <div className="max-w-7xl mx-auto space-y-12">
-          
+
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <h2 className="text-3xl sm:text-4xl font-light text-slate-900 tracking-tight">
               A supervisor in your pocket.
@@ -394,7 +394,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* FEATURE GRID / ACADEMIC CARDS */}
       <section id="features" className="relative z-10 py-20 px-6 max-w-7xl mx-auto space-y-12">
-        
+
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <span className="text-[10px] uppercase font-bold tracking-widest text-orange-600">Workspace Features</span>
           <h2 className="text-3xl font-light tracking-tight text-slate-900">
@@ -413,7 +413,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             { title: "Chapter Review", desc: "Submit drafts of chapters 1 to 5 and receive precise sentence-level feedback.", iconColor: "text-orange-600" },
             { title: "Slide Review", desc: "Submit presentation slides to make sure key logic parameters fit your layout.", iconColor: "text-orange-600" }
           ].map((item, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               whileHover={{ y: -4 }}
               className="bg-white p-6 border border-slate-200/60 rounded-lg shadow-sm hover:shadow-md hover:border-orange-200/50 transition-all flex flex-col justify-between h-56 relative overflow-hidden group text-left"
@@ -421,7 +421,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="w-8 h-8 rounded-lg bg-orange-50/50 border border-orange-100/30 flex items-center justify-center relative z-10 group-hover:bg-orange-100/50 transition-colors">
                 <Sparkles size={14} className={item.iconColor} />
               </div>
-              
+
               <div className="space-y-2 relative z-10">
                 <h3 className="font-dm-sans text-xs font-normal text-slate-900 tracking-wide">{item.title}</h3>
                 <p className="text-[10px] text-slate-500 leading-relaxed font-light">{item.desc}</p>
@@ -449,7 +449,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           ].map((step, i) => (
             <div key={i} className="relative text-left space-y-3">
               <div className="flex items-center gap-3">
-                <span className="text-xl font-bold text-orange-600">0{i+1}</span>
+                <span className="text-xl font-bold text-orange-600">0{i + 1}</span>
                 <div className="flex-1 h-px bg-slate-200 hidden md:block" />
               </div>
               <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
@@ -461,18 +461,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* VOICE EXPERIENCE SECTION */}
       <section id="voice-mode" className="relative z-10 py-20 px-6 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-12">
-        
+
         {/* Left Side */}
         <div className="flex-1 space-y-6 text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[10px] font-bold text-orange-700">
             <Mic size={12} />
             <span>Voice Supervisor Mode</span>
           </div>
-          
+
           <h2 className="text-3xl sm:text-4xl font-light tracking-tight text-slate-900 leading-tight">
             Feels like talking to a real supervisor
           </h2>
-          
+
           <p className="text-sm text-slate-600 leading-relaxed">
             Speak to Prof. Ada using voice or text. She responds like a real academic supervisor: clear, direct, practical, and without confusion.
           </p>
@@ -489,7 +489,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Device Frame */}
         <div className="flex-1 flex justify-center">
           <div className="w-[280px] h-[440px] rounded-[36px] border-[5px] border-slate-200 bg-white p-5 flex flex-col justify-between items-center relative overflow-hidden shadow-xl">
-            
+
             <div className="w-full flex items-center justify-between text-[10px] text-slate-400 font-medium">
               <span>Siri Supervision</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -498,7 +498,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Siri Orb in Center */}
             <div className="flex flex-col items-center gap-3 my-auto">
               <div className="siri-orb" />
-              
+
               <div className="text-center space-y-1 mt-4">
                 <span className="text-[10px] text-slate-400 block">Prof. Ada Speech Mode</span>
                 <span className="text-xs font-semibold text-slate-800">"How can I help you today?"</span>
@@ -508,19 +508,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Waveform */}
             <div className="w-full space-y-3">
               <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg flex items-center gap-2">
-                <button 
+                <button
                   onClick={() => setIsVoicePlaying(!isVoicePlaying)}
                   className="w-6 h-6 rounded-full bg-gradient-to-r from-orange-600 to-amber-500 flex items-center justify-center text-white"
                 >
                   {isVoicePlaying ? <Pause size={10} /> : <Play size={10} />}
                 </button>
-                
+
                 <div className="flex-1 flex items-end gap-0.5 h-3">
                   {[20, 50, 30, 70, 45, 60, 35, 80, 55, 30].map((h, i) => (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       className="flex-1 rounded-sm transition-all"
-                      style={{ 
+                      style={{
                         height: `${h}%`,
                         background: isVoicePlaying && i * 10 < voiceProgress ? "#ea580c" : "#e2e8f0"
                       }}
@@ -541,16 +541,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* TRUST / WARNING SECTION */}
       <section className="relative z-10 py-20 px-6 max-w-7xl mx-auto space-y-12 border-t border-slate-200">
-        
+
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
             <AlertTriangle className="text-amber-600" size={20} />
           </div>
-          
+
           <h2 className="text-3xl font-light text-slate-900 tracking-tight">
             No sugarcoating. Just real feedback.
           </h2>
-          
+
           <p className="text-sm text-slate-600 max-w-lg mx-auto">
             Prof. Ada doesn’t just say “good work”. She tells you: what your supervisor will question, and what you must fix before submission.
           </p>
@@ -630,7 +630,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span>{faq.question}</span>
                   {isOpen ? <ChevronUp size={16} className="text-orange-600" /> : <ChevronDown size={16} className="text-slate-400" />}
                 </button>
-                
+
                 <AnimatePresence>
                   {isOpen && (
                     <motion.div
@@ -655,23 +655,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* CTA SECTION */}
       <section className="relative z-10 py-20 px-6 max-w-5xl mx-auto">
         <div className="bg-gradient-to-tr from-orange-100 to-amber-50 border border-orange-200/50 p-8 sm:p-12 text-center rounded-3xl shadow-md relative">
-          
+
           <h2 className="text-3xl sm:text-5xl font-light text-slate-900 tracking-tight mb-4 animate-pulse-soft">
             Start your project the right way.
           </h2>
-          
+
           <p className="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed mb-8">
             Don’t wait until final submission to discover mistakes. Fix them early with Prof. Ada.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button 
+            <button
               onClick={onStartConversation}
               className="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-sm transition-all shadow-md active:scale-95"
             >
               Start Free Review
             </button>
-            <button 
+            <button
               onClick={onStartConversation}
               className="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-semibold text-sm transition-colors active:scale-95"
             >
@@ -685,7 +685,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="relative z-10 border-t border-slate-100 bg-white py-8 px-6 overflow-hidden">
         {/* Subtle orange accent glow behind footer */}
         <div className="absolute w-[350px] h-[350px] -bottom-[150px] -right-[50px] bg-orange-100/10 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div className="space-y-3 max-w-sm">
@@ -699,7 +699,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <div className="flex flex-wrap gap-x-8 gap-y-4 font-dm-sans text-xs font-normal text-slate-400">
               {navLinks.map((link) => (
-                <a 
+                <a
                   key={link.label}
                   href={link.href}
                   className="hover:text-slate-950 transition-colors relative py-0.5 group"
@@ -713,9 +713,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           <div className="h-px bg-slate-100 w-full" />
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-dm-sans font-normal text-slate-400">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 text-[10px] font-dm-sans font-normal text-slate-400">
             <span>&copy; {new Date().getFullYear()} Prof. Ada. All rights reserved.</span>
-            <span className="text-slate-300 font-light lowercase">Academic Integrity Compliant • Sandboxed Data Environment</span>
+
           </div>
         </div>
       </footer>

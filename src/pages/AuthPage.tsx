@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mail, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
-import { api } from "../utils/api";
+import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 
 interface AuthPageProps {
   onLoginSuccess: (email: string, accessToken: string, refreshToken: string) => void;
@@ -14,11 +13,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   onBack,
   initialError = null,
 }) => {
-  const [email, setEmail] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Sync initial error prop
   useEffect(() => {
@@ -28,51 +24,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   }, [initialError]);
 
   const handleGoogleLogin = async () => {
-    if (isEmailLoading || isGoogleLoading) return;
+    if (isGoogleLoading) return;
     setError(null);
-    setSuccessMessage(null);
     setIsGoogleLoading(true);
     
     // Simulate API call for Google Auth
     setTimeout(() => {
       setIsGoogleLoading(false);
-      // For local development, generate mock tokens
+      // For local development and hosted demo, generate mock tokens
       const mockAccessToken = "mock_google_access_token_" + Date.now();
       const mockRefreshToken = "mock_google_refresh_token_" + Date.now();
       onLoginSuccess("student@university.edu", mockAccessToken, mockRefreshToken);
     }, 1200);
-  };
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isEmailLoading || isGoogleLoading) return;
-    setError(null);
-    setSuccessMessage(null);
-
-    if (!email) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
-    if (!email.includes("@") || !email.includes(".")) {
-      setError("Please enter a valid email format.");
-      return;
-    }
-
-    setIsEmailLoading(true);
-
-    try {
-      const res = await api.post("/auth/email/magic-link", { email });
-      if (res.data.success) {
-        setSuccessMessage("Magic login link has been sent to your email address. Please check your inbox!");
-      }
-    } catch (err: any) {
-      console.error("Magic link request failed:", err);
-      const errMsg = err.response?.data?.error?.message || "Failed to send magic link. Please check your network connection or server logs.";
-      setError(errMsg);
-    } finally {
-      setIsEmailLoading(false);
-    }
   };
 
   return (
@@ -120,22 +83,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           </motion.div>
         )}
 
-        {/* Success Message banner */}
-        {successMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full mb-6 p-3.5 rounded-xl bg-emerald-50 border border-emerald-100 flex items-start gap-2.5 text-xs text-emerald-700"
-          >
-            <CheckCircle size={15} className="mt-0.5 flex-shrink-0" />
-            <span>{successMessage}</span>
-          </motion.div>
-        )}
-
         {/* Google Authentication Option */}
         <button
           onClick={handleGoogleLogin}
-          disabled={isGoogleLoading || isEmailLoading}
+          disabled={isGoogleLoading}
           className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group active:scale-[0.98]"
         >
           {isGoogleLoading ? (
@@ -164,46 +115,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             {isGoogleLoading ? "Connecting..." : "Continue with Google"}
           </span>
         </button>
-
-        {/* Divider */}
-        <div className="relative w-full my-7 flex items-center justify-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
-          </div>
-          <span className="relative px-3 bg-white text-[10px] font-dm-sans font-normal uppercase tracking-widest text-slate-400">
-            or email
-          </span>
-        </div>
-
-        {/* Email Form */}
-        <form onSubmit={handleEmailLogin} className="w-full flex flex-col gap-4">
-          <div className="relative">
-            <Mail size={16} className="absolute left-4 top-[15px] text-slate-400" />
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="student.name@example.com"
-              disabled={isGoogleLoading || isEmailLoading || !!successMessage}
-              className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/40 focus:border-orange-500/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isGoogleLoading || isEmailLoading || !!successMessage}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-sm transition-all duration-300 shadow-md active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isEmailLoading ? (
-              <>
-                <Loader2 className="animate-spin h-5 w-5 text-white" />
-                <span>Sending magic link...</span>
-              </>
-            ) : (
-               <span>Continue with Email</span>
-            )}
-          </button>
-        </form>
 
         {/* Integrity Notice */}
         <p className="text-[10px] text-slate-400 text-center mt-8 font-light select-none leading-relaxed">
