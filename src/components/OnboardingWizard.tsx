@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, X, Sparkles, CheckCircle2, GraduationCap, BookOpen, Layers } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Sparkles, CheckCircle2, Library, BookOpen, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface OnboardingWizardProps {
@@ -121,7 +121,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                         className="flex flex-col items-center text-center mt-8"
                       >
                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center mb-6 border border-orange-200 shadow-sm">
-                          <GraduationCap className="w-10 h-10 text-orange-600" />
+                          <Library className="w-10 h-10 text-orange-600" />
                         </div>
                         <h2 className="font-dm-sans text-3xl font-light tracking-tight text-slate-900 mb-4">
                           Welcome to Prof. Ada
@@ -227,7 +227,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                           Prof. Ada is now customized for a {level} level student, currently focusing on {projectStatus}.
                         </p>
                         <div className="flex items-center gap-4 text-xs font-bold text-slate-500 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
-                          <span className="flex items-center gap-1.5"><GraduationCap size={14} className="text-slate-400"/> {level}</span>
+                          <span className="flex items-center gap-1.5"><Library size={14} className="text-slate-400"/> {level}</span>
                           <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                           <span className="flex items-center gap-1.5"><Layers size={14} className="text-slate-400"/> {projectStatus}</span>
                         </div>

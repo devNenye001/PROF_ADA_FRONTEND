@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Shield, GraduationCap, User } from "lucide-react";
+import { Shield, Library, User } from "lucide-react";
 
 const LEVELS = ["100", "200", "300", "400"];
 
@@ -76,7 +76,7 @@ export const SettingsPage: React.FC = () => {
             {/* Academic Level */}
             <div className="space-y-2 pt-2">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <GraduationCap size={12} />
+                <Library size={12} />
                 Academic Level
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

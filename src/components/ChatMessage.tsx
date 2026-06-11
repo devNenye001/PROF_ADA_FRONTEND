@@ -91,7 +91,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onSelectDocum
               </p>
             )}
             {message.file && renderAttachment(message.file)}
-            {message.hasAudio && <AudioBubble audioUrl={message.audioUrl} />}
+            {message.hasAudio && <AudioBubble text={message.content} />}
           </GlassmorphicPanel>
         )}
         <span className="text-xs text-slate-400 mt-1.5 font-medium">

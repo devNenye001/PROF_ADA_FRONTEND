@@ -18,6 +18,7 @@ export interface Conversation {
   messages: Message[];
   createdAt: string;
   updatedAt: string;
+  projectId?: string | null;
 }
 
 export interface Document {
@@ -27,6 +28,7 @@ export interface Document {
   uploadedAt: Date | string;
   highlights?: Highlight[];
   dataUrl?: string;
+  fileUrl?: string;
 }
 
 export interface Highlight {
@@ -56,4 +58,13 @@ export interface OnboardingStep {
   title: string;
   description: string;
   icon: React.ReactNode;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'IDEA' | 'DRAFTING' | 'REVIEWING' | 'COMPLETED';
+  createdAt: string;
+  updatedAt: string;
 }

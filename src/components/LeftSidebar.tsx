@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { 
   FileText, Plus, X, FolderGit2, UploadCloud, 
-  Settings, GraduationCap, MessageSquare, Trash2, User, LogOut
+  Settings, Library, MessageSquare, Trash2, User, LogOut
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Document, Conversation } from "../types";
@@ -73,7 +73,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20 shadow-inner">
-              <GraduationCap className="w-4 h-4 text-orange-600 animate-pulse-soft" />
+              <Library className="w-4 h-4 text-orange-600 animate-pulse-soft" />
             </div>
             <span className="font-dm-sans font-semibold text-slate-950 tracking-wide bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
               Prof. Ada
@@ -85,7 +85,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           className="p-1.5 hover:bg-slate-200/50 rounded-lg transition-colors text-slate-500 hover:text-slate-900 mx-auto md:mx-0"
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          {isCollapsed ? <GraduationCap size={18} /> : <X size={16} />}
+          {isCollapsed ? <Library size={18} /> : <X size={16} />}
         </button>
       </div>
 

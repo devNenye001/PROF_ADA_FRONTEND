@@ -6,17 +6,39 @@ import { DocumentViewer } from "./DocumentViewer";
 import { SettingsPage } from "./SettingsPage";
 import { ProjectReviewWorkspace } from "./ProjectReviewWorkspace";
 import { SlideReviewWorkspace } from "./SlideReviewWorkspace";
-import { Message, Document, Conversation } from "../types";
-import { generateProfResponse } from "../utils/ai";
-import { Sparkles, MessageSquare, ChevronDown, Menu } from "lucide-react";
+import { Message, Document, Conversation, Project } from "../types";
+import { api } from "../utils/api";
+import { 
+  Sparkles, MessageSquare, ChevronDown, Menu, Plus, 
+  FolderGit2, FileText, CheckCircle2, AlertCircle, Play, 
+  FileCheck, Library, BookOpen, Loader2
+} from "lucide-react";
 import { CONTEXT_MODES } from "../utils/constants";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MainWorkspaceProps {
   userEmail: string;
   onLogout: () => void;
 }
 
+// Base64 helper for multipart uploads
+const dataURItoBlob = (dataURI: string) => {
+  const byteString = atob(dataURI.split(',')[1]);
+  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: mimeString });
+};
+
 export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogout }) => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(
+    () => localStorage.getItem("prof-ada-active-project-id")
+  );
+  
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,235 +48,252 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
   const [contextMode, setContextMode] = useState("topic-discovery");
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
 
-  // Mock and uploaded documents state
-  const [documents, setDocuments] = useState<Document[]>(() => {
-    const storedDocs = localStorage.getItem("prof-ada-documents");
-    if (storedDocs) {
-      try {
-        return JSON.parse(storedDocs).map((d: any) => ({
-          ...d,
-          uploadedAt: new Date(d.uploadedAt)
-        }));
-      } catch (e) {
-        console.error("Failed to parse stored documents", e);
-      }
-    }
-    return [
-      {
-        id: "1",
-        name: "Chapter_1_v1.docx",
-        type: "docx",
-        uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: "2",
-        name: "Chapter_3.pdf",
-        type: "pdf",
-        uploadedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: "3",
-        name: "Slides.pptx",
-        type: "pptx",
-        uploadedAt: new Date(),
-      },
-    ];
-  });
+  // Project creation modal states
+  const [showCreateProject, setShowCreateProject] = useState(false);
+  const [newProjectTitle, setNewProjectTitle] = useState("");
+  const [newProjectDesc, setNewProjectDesc] = useState("");
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
-  // Save documents to local storage when changed
+  // Load projects on mount
   useEffect(() => {
-    localStorage.setItem("prof-ada-documents", JSON.stringify(documents));
-  }, [documents]);
-
-  // Load conversations from local storage
-  useEffect(() => {
-    const stored = localStorage.getItem("prof-ada-conversations");
-    let loadedConversations: Conversation[] = [];
-    if (stored) {
-      try {
-        loadedConversations = JSON.parse(stored);
-      } catch (e) {
-        console.error("Failed to parse conversations", e);
-      }
-    }
-    
-    if (loadedConversations.length === 0) {
-      const initialConv: Conversation = {
-        id: "chat-" + Date.now(),
-        title: "New Conversation",
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      loadedConversations = [initialConv];
-      localStorage.setItem("prof-ada-conversations", JSON.stringify(loadedConversations));
-    }
-    
-    setConversations(loadedConversations);
-    
-    const storedActiveId = localStorage.getItem("prof-ada-active-conversation-id");
-    if (storedActiveId && loadedConversations.some(c => c.id === storedActiveId)) {
-      setActiveConversationId(storedActiveId);
-    } else {
-      setActiveConversationId(loadedConversations[0].id);
-      localStorage.setItem("prof-ada-active-conversation-id", loadedConversations[0].id);
-    }
+    api.get("/projects")
+      .then((res) => {
+        if (res.data.success) {
+          setProjects(res.data.data);
+          
+          // Auto select first project if none is active
+          if (!activeProjectId && res.data.data.length > 0) {
+            handleSelectProject(res.data.data[0].id);
+          } else if (activeProjectId) {
+            handleSelectProject(activeProjectId);
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to load projects:", err));
   }, []);
 
-  const saveConversations = (updated: Conversation[]) => {
-    setConversations(updated);
-    localStorage.setItem("prof-ada-conversations", JSON.stringify(updated));
+  const handleSelectProject = (projectId: string) => {
+    setActiveProjectId(projectId);
+    localStorage.setItem("prof-ada-active-project-id", projectId);
+    
+    // Load conversations for this project
+    api.get(`/projects/${projectId}/conversations`)
+      .then((res) => {
+        if (res.data.success) {
+          setConversations(res.data.data);
+          if (res.data.data.length > 0) {
+            setActiveConversationId(res.data.data[0].id);
+          } else {
+            setActiveConversationId(null);
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to fetch project conversations:", err));
+
+    // Load documents and slides
+    Promise.all([
+      api.get(`/projects/${projectId}/documents`),
+      api.get(`/projects/${projectId}/slides`)
+    ])
+      .then(([docRes, slideRes]) => {
+        const docs = docRes.data.data.map((d: any) => ({
+          id: d.id,
+          name: d.title,
+          type: "docx" as const,
+          uploadedAt: new Date(d.createdAt),
+          fileUrl: d.fileUrl,
+        }));
+        const slides = slideRes.data.data.map((s: any) => ({
+          id: s.id,
+          name: s.title,
+          type: "pptx" as const,
+          uploadedAt: new Date(s.createdAt),
+          fileUrl: s.fileUrl,
+        }));
+        setDocuments([...docs, ...slides]);
+      })
+      .catch((err) => console.error("Failed to load documents/slides:", err));
+  };
+
+  const handleCreateProjectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjectTitle.trim() || isCreatingProject) return;
+
+    setIsCreatingProject(true);
+    try {
+      const res = await api.post("/projects", {
+        title: newProjectTitle,
+        description: newProjectDesc,
+      });
+
+      if (res.data.success) {
+        const createdProject = res.data.data;
+        setProjects((prev) => [createdProject, ...prev]);
+        setShowCreateProject(false);
+        setNewProjectTitle("");
+        setNewProjectDesc("");
+        handleSelectProject(createdProject.id);
+      }
+    } catch (err) {
+      console.error("Failed to create project:", err);
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   const handleSendMessage = async (messageText: string, file?: { name: string; type: string; dataUrl: string }) => {
-    if (!activeConversationId) return;
+    let convId = activeConversationId;
 
-    let attachedDoc: Document | undefined;
-    if (file) {
-      const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
-      const docType: Document["type"] = ["pdf", "docx", "pptx", "txt"].includes(fileExtension)
-        ? (fileExtension as Document["type"])
-        : "image";
-
-      attachedDoc = {
-        id: "doc-" + Date.now(),
-        name: file.name,
-        type: docType,
-        uploadedAt: new Date(),
-        dataUrl: file.dataUrl,
-      };
-
-      setDocuments(prev => [attachedDoc!, ...prev]);
-    }
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "student",
-      content: messageText,
-      timestamp: new Date().toISOString(),
-      file: file ? {
-        name: file.name,
-        type: file.type,
-        dataUrl: file.dataUrl,
-      } : undefined,
-    };
-
-    const currentConv = conversations.find(c => c.id === activeConversationId);
-    if (!currentConv) return;
-
-    const newMessages = [...currentConv.messages, userMessage];
-    
-    // Generate new title if it is currently default
-    let newTitle = currentConv.title;
-    if (
-      currentConv.messages.length === 0 || 
-      currentConv.title === "New Conversation" || 
-      currentConv.title === "Untitled Chat"
-    ) {
-      if (messageText.trim()) {
-        const words = messageText.trim().split(/\s+/);
-        newTitle = words.slice(0, 5).join(" ");
-      } else if (file) {
-        newTitle = `File: ${file.name}`;
-      }
-      if (newTitle.length > 25) {
-        newTitle = newTitle.substring(0, 25) + "...";
+    if (!convId) {
+      // Create a conversation session on demand if missing
+      try {
+        const title = messageText.trim() ? messageText.substring(0, 20) + "..." : "New Chat";
+        const endpoint = activeProjectId 
+          ? `/projects/${activeProjectId}/conversations` 
+          : '/conversations';
+        const payload = activeProjectId ? { topic: title } : { title };
+        
+        const res = await api.post(endpoint, payload);
+        if (res.data.success) {
+          const newConv = res.data.data;
+          convId = newConv.id;
+          setActiveConversationId(newConv.id);
+          setConversations((prev) => [newConv, ...prev]);
+        }
+      } catch (err) {
+        console.error("Failed to create conversation session:", err);
+        return;
       }
     }
 
-    const updatedConv: Conversation = {
-      ...currentConv,
-      title: newTitle,
-      messages: newMessages,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const updatedConversations = conversations.map(c => 
-      c.id === activeConversationId ? updatedConv : c
-    );
-    saveConversations(updatedConversations);
+    if (!convId) return;
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      let responseText = await generateProfResponse(messageText || (file ? `I uploaded ${file.name}` : ""), contextMode);
       if (file) {
-        responseText = `I've received your document: **${file.name}**. I have reviewed it and highlighted sections that need attention. You can click on the file preview in the chat to view the detailed annotations in the split pane.\n\n${responseText}`;
+        if (!activeProjectId) {
+          alert("Please select or create an active project in the Projects tab before uploading documents.");
+          return;
+        }
+
+        // 1. Process base64 file upload
+        const blob = dataURItoBlob(file.dataUrl);
+        const uploadFile = new File([blob], file.name, { type: file.type });
+        const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+        const type = fileExtension === "pptx" ? "SLIDE" : "CHAPTER";
+
+        const formData = new FormData();
+        formData.append("file", uploadFile);
+        formData.append("title", file.name);
+        formData.append("type", type);
+
+        const uploadRes = await api.post(`/projects/${activeProjectId}/documents/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        if (uploadRes.data.success) {
+          const savedDoc = uploadRes.data.data;
+          
+          // Sync documents state
+          const newDocItem: Document = {
+            id: savedDoc.id,
+            name: savedDoc.title,
+            type: fileExtension === "pptx" ? "pptx" : "docx",
+            uploadedAt: new Date(savedDoc.createdAt),
+            fileUrl: savedDoc.fileUrl,
+          };
+          setDocuments(prev => [newDocItem, ...prev]);
+
+          // 2. Trigger AI Review on uploaded asset
+          const reviewRes = await api.post(`/documents/${savedDoc.id}/review`, { type });
+          if (reviewRes.data.success) {
+            handleSelectDocument(newDocItem);
+          }
+        }
+      } else {
+        // Send typical text message to conversation messages array
+        const res = await api.post(`/conversations/${convId}/messages`, {
+          content: messageText,
+          mode: contextMode
+        });
+
+        if (res.data.success) {
+          const { studentMessage, profMessage } = res.data.data;
+          
+          setConversations((prev) =>
+            prev.map((c) => {
+              if (c.id === convId) {
+                return {
+                  ...c,
+                  messages: [...(c.messages || []), studentMessage, profMessage],
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return c;
+            })
+          );
+        }
       }
-
-      const profMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "prof",
-        content: responseText,
-        timestamp: new Date().toISOString(),
-        hasAudio: Math.random() > 0.5,
-      };
-
-      const finalMessages = [...newMessages, profMessage];
-      const finalConv: Conversation = {
-        ...updatedConv,
-        messages: finalMessages,
-        updatedAt: new Date().toISOString(),
-      };
-
-      const finalConversations = conversations.map(c => 
-        c.id === activeConversationId ? finalConv : c
-      );
-      saveConversations(finalConversations);
-      
-      // Auto open document viewer for convenience if a file is uploaded
-      if (attachedDoc) {
-        handleSelectDocument(attachedDoc);
-      }
+    } catch (err) {
+      console.error("Message processing error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleNewConversation = () => {
-    const newConv: Conversation = {
-      id: "chat-" + Date.now(),
-      title: "New Conversation",
-      messages: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const updated = [newConv, ...conversations];
-    saveConversations(updated);
-    setActiveConversationId(newConv.id);
-    localStorage.setItem("prof-ada-active-conversation-id", newConv.id);
-    setActiveTab("chat");
+  const handleNewConversation = async (projectId?: string) => {
+    const targetProjId = projectId || activeProjectId;
+    try {
+      const endpoint = targetProjId 
+        ? `/projects/${targetProjId}/conversations` 
+        : '/conversations';
+      const payload = targetProjId ? { topic: 'New Conversation' } : { title: 'New Conversation' };
+      
+      const res = await api.post(endpoint, payload);
+      if (res.data.success) {
+        const newConv = res.data.data;
+        setConversations((prev) => [newConv, ...prev]);
+        setActiveConversationId(newConv.id);
+        setActiveTab("chat");
+      }
+    } catch (err) {
+      console.error("Failed to start new conversation:", err);
+    }
   };
 
   const handleSelectConversation = (id: string) => {
     setActiveConversationId(id);
-    localStorage.setItem("prof-ada-active-conversation-id", id);
     setActiveTab("chat");
+    
+    // Fetch full messages history
+    api.get(`/conversations/${id}`)
+      .then((res) => {
+        if (res.data.success) {
+          setConversations((prev) =>
+            prev.map((c) => (c.id === id ? res.data.data : c))
+          );
+        }
+      })
+      .catch((err) => console.error("Failed to load message history:", err));
   };
 
-  const handleDeleteConversation = (id: string) => {
-    const updated = conversations.filter(c => c.id !== id);
-    
-    if (updated.length === 0) {
-      const initialConv: Conversation = {
-        id: "chat-" + Date.now(),
-        title: "New Conversation",
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      saveConversations([initialConv]);
-      setActiveConversationId(initialConv.id);
-      localStorage.setItem("prof-ada-active-conversation-id", initialConv.id);
-    } else {
-      saveConversations(updated);
-      if (activeConversationId === id) {
-        setActiveConversationId(updated[0].id);
-        localStorage.setItem("prof-ada-active-conversation-id", updated[0].id);
+  const handleDeleteConversation = async (id: string) => {
+    try {
+      const res = await api.delete(`/conversations/${id}`);
+      if (res.data.success) {
+        const updated = conversations.filter((c) => c.id !== id);
+        setConversations(updated);
+        
+        if (updated.length > 0) {
+          handleSelectConversation(updated[0].id);
+        } else {
+          setActiveConversationId(null);
+        }
       }
+    } catch (err) {
+      console.error("Failed to delete conversation:", err);
     }
   };
 
@@ -266,8 +305,9 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
     }
   };
 
-  const activeConv = conversations.find(c => c.id === activeConversationId);
-  const activeMessages = activeConv ? activeConv.messages : [];
+  const activeConv = conversations.find((c) => c.id === activeConversationId);
+  const activeMessages = activeConv ? activeConv.messages || [] : [];
+  const activeProject = projects.find((p) => p.id === activeProjectId);
 
   const renderMainContent = () => {
     if (activeTab === "settings") {
@@ -276,16 +316,197 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
 
     if (activeTab === "projects") {
       return (
-        <div className="flex-1 flex items-center justify-center text-slate-500">
-          Projects view coming soon...
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 max-w-4xl mx-auto w-full custom-scrollbar font-sans">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="font-dm-sans text-3xl font-light tracking-tight text-slate-900 mb-2">Projects</h1>
+              <p className="text-slate-500 text-sm">Organize and manage your academic supervision projects and theses.</p>
+            </div>
+            <button
+              onClick={() => setShowCreateProject(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-450 text-white font-medium text-sm shadow-sm active:scale-95 transition-all"
+            >
+              <Plus size={16} />
+              <span>New Project</span>
+            </button>
+          </div>
+
+          {/* Project List Grid */}
+          {projects.length === 0 ? (
+            <div className="text-center py-16 bg-white/40 border border-slate-200/50 rounded-2xl p-8 shadow-sm">
+              <FolderGit2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="font-dm-sans text-lg font-normal text-slate-800 mb-1">No Projects Found</h3>
+              <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">Create your first academic project to begin draft uploads and research topic selections.</p>
+              <button
+                onClick={() => setShowCreateProject(true)}
+                className="px-5 py-2.5 rounded-xl bg-orange-500/10 text-orange-700 hover:bg-orange-500/15 border border-orange-200/30 text-sm font-semibold transition-all"
+              >
+                Create Project
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {projects.map((proj) => {
+                const isActive = proj.id === activeProjectId;
+                return (
+                  <div
+                    key={proj.id}
+                    onClick={() => handleSelectProject(proj.id)}
+                    className={`p-6 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
+                      isActive
+                        ? "bg-orange-500/5 border-orange-500/30 shadow-md shadow-orange-500/5 ring-1 ring-orange-500/20"
+                        : "bg-white/70 border-slate-200/60 hover:border-slate-300/80 hover:shadow-sm"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex justify-between items-start gap-4 mb-3">
+                        <h3 className="font-dm-sans text-base font-normal text-slate-900 tracking-wide">{proj.title}</h3>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                          proj.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' :
+                          proj.status === 'REVIEWING' ? 'bg-amber-100 text-amber-800' :
+                          proj.status === 'DRAFTING' ? 'bg-blue-100 text-blue-800' :
+                          'bg-slate-100 text-slate-800'
+                        }`}>
+                          {proj.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-light line-clamp-3 leading-relaxed mb-4">
+                        {proj.description || "No description provided."}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
+                      <span>Created {new Date(proj.createdAt).toLocaleDateString()}</span>
+                      {isActive && <span className="text-orange-600 font-bold">Active Workspace</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Create Project Modal */}
+          {showCreateProject && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+              <div 
+                className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm" 
+                onClick={() => setShowCreateProject(false)} 
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-2xl border border-slate-200 shadow-2xl p-6 w-full max-w-md relative z-10 font-sans"
+              >
+                <h2 className="font-dm-sans text-xl font-normal text-slate-900 mb-4">Create New Project</h2>
+                <form onSubmit={handleCreateProjectSubmit} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Project Title</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g., Optimistic Replication in Distributed DBs"
+                      value={newProjectTitle}
+                      onChange={(e) => setNewProjectTitle(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500/50 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Summarize your research aim and variables..."
+                      value={newProjectDesc}
+                      onChange={(e) => setNewProjectDesc(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-orange-500/50 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none transition-all resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-3 justify-end pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateProject(false)}
+                      className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isCreatingProject}
+                      className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+                    >
+                      {isCreatingProject ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <span>Create Project</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
         </div>
       );
     }
 
     if (activeTab === "files") {
       return (
-        <div className="flex-1 flex items-center justify-center text-slate-500">
-          Uploaded Files view coming soon...
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 max-w-4xl mx-auto w-full custom-scrollbar font-sans">
+          <div className="mb-8">
+            <h1 className="font-dm-sans text-3xl font-light tracking-tight text-slate-900 mb-2">Document Library</h1>
+            <p className="text-slate-500 text-sm">View, trigger review, and access supervisor annotations on your thesis drafts.</p>
+          </div>
+
+          {!activeProjectId ? (
+            <div className="text-center py-16 bg-white/40 border border-slate-200/50 rounded-2xl p-8">
+              <FolderGit2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="font-dm-sans text-lg font-normal text-slate-800 mb-1">No Project Selected</h3>
+              <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">Select or create a project first to load associated document libraries.</p>
+              <button
+                onClick={() => setActiveTab("projects")}
+                className="px-5 py-2.5 rounded-xl bg-orange-500 text-white hover:bg-orange-600 text-sm font-semibold active:scale-95 transition-all shadow-sm"
+              >
+                Go to Projects
+              </button>
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="text-center py-16 bg-white/40 border border-slate-200/50 rounded-2xl p-8">
+              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="font-dm-sans text-lg font-normal text-slate-800 mb-1">No Files Uploaded</h3>
+              <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">Start by uploading a document in the chat window. Valid formats: PDF, DOCX, and PPTX.</p>
+              <button
+                onClick={() => setActiveTab("chat")}
+                className="px-5 py-2.5 rounded-xl bg-orange-500/10 text-orange-700 hover:bg-orange-500/15 border border-orange-200/30 text-sm font-semibold transition-all"
+              >
+                Go to Chat
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="p-5 rounded-2xl border border-slate-200/60 bg-white/70 hover:border-slate-300/80 shadow-sm flex items-center justify-between gap-6 transition-all"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/5 border border-orange-200/20 flex items-center justify-center flex-shrink-0">
+                      <FileText className={`w-5 h-5 ${doc.name.endsWith('pptx') ? 'text-orange-500' : 'text-blue-500'}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-dm-sans text-sm font-normal text-slate-900 truncate tracking-wide">{doc.name}</h3>
+                      <p className="text-[10px] text-slate-400 mt-1 font-medium">Uploaded {new Date(doc.uploadedAt).toLocaleDateString()} at {new Date(doc.uploadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSelectDocument(doc)}
+                      className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-all active:scale-95"
+                    >
+                      View Feedback
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
@@ -298,7 +519,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
       return <SlideReviewWorkspace document={selectedDocument} />;
     }
 
-    // Default chat view (topic-discovery, research-guidance)
+    // Default chat view
     return (
       <div className="flex flex-col flex-1 h-full">
         <ChatArea 
@@ -334,7 +555,6 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
           documents={documents}
           onSelectDocument={handleSelectDocument}
           selectedDocId={selectedDocument?.id}
-          onUploadClick={() => console.log("Upload clicked")}
           activeTab={activeTab}
           onTabChange={(tab) => {
             setActiveTab(tab);
@@ -381,7 +601,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
             >
               <Menu size={20} />
             </button>
-            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse-soft shadow-[0_0_8px_rgba(249,115,22,0.6)] hidden md:inline-block" />
+            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse hidden md:inline-block shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
             {activeTab === "chat" ? (
               <div className="relative">
                 <button
@@ -417,13 +637,21 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
               </div>
             ) : (
               <h1 className="font-dm-sans text-base font-normal tracking-wide text-slate-900">
-                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                {activeTab === "files" ? "Document Library" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
               </h1>
             )}
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Quick context mode switcher */}
+            {activeProject && (
+              <div 
+                onClick={() => setActiveTab("projects")}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-orange-500/5 border border-orange-200/20 text-orange-800 text-xs font-semibold cursor-pointer hover:bg-orange-500/10 transition-colors shadow-inner"
+              >
+                <BookOpen size={13} />
+                <span>Project: {activeProject.title}</span>
+              </div>
+            )}
             {activeTab === "chat" && contextMode !== "topic-discovery" && contextMode !== "research-guidance" && (
               <button
                 onClick={() => setContextMode("topic-discovery")}
@@ -433,7 +661,6 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
                 Return to Chat
               </button>
             )}
-
           </div>
         </div>
 

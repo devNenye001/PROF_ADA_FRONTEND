@@ -1,34 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mail, AlertCircle } from "lucide-react";
+import { ArrowLeft, Mail, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { api } from "../utils/api";
 
 interface AuthPageProps {
-  onLoginSuccess: (email: string) => void;
+  onLoginSuccess: (email: string, accessToken: string, refreshToken: string) => void;
   onBack: () => void;
+  initialError?: string | null;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onBack }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ 
+  onLoginSuccess, 
+  onBack,
+  initialError = null,
+}) => {
   const [email, setEmail] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Sync initial error prop
+  useEffect(() => {
+    if (initialError) {
+      setError(initialError);
+    }
+  }, [initialError]);
 
   const handleGoogleLogin = async () => {
     if (isEmailLoading || isGoogleLoading) return;
     setError(null);
+    setSuccessMessage(null);
     setIsGoogleLoading(true);
     
     // Simulate API call for Google Auth
     setTimeout(() => {
       setIsGoogleLoading(false);
-      onLoginSuccess("student@university.edu");
-    }, 1500);
+      // For local development, generate mock tokens
+      const mockAccessToken = "mock_google_access_token_" + Date.now();
+      const mockRefreshToken = "mock_google_refresh_token_" + Date.now();
+      onLoginSuccess("student@university.edu", mockAccessToken, mockRefreshToken);
+    }, 1200);
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEmailLoading || isGoogleLoading) return;
     setError(null);
+    setSuccessMessage(null);
 
     if (!email) {
       setError("Please enter a valid email address.");
@@ -42,16 +61,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onBack }) =>
 
     setIsEmailLoading(true);
 
-    // Simulate API call for Email Auth
-    setTimeout(() => {
+    try {
+      const res = await api.post("/auth/email/magic-link", { email });
+      if (res.data.success) {
+        setSuccessMessage("Magic login link has been sent to your email address. Please check your inbox!");
+      }
+    } catch (err: any) {
+      console.error("Magic link request failed:", err);
+      const errMsg = err.response?.data?.error?.message || "Failed to send magic link. Please check your network connection or server logs.";
+      setError(errMsg);
+    } finally {
       setIsEmailLoading(false);
-      onLoginSuccess(email);
-    }, 1500);
+    }
   };
 
   return (
     <div className="fixed inset-0 h-screen w-screen bg-slate-50 text-slate-900 flex items-center justify-center overflow-hidden z-50 font-sans">
-      {/* Light Aurora Glow Backdrop Spots (Matching Landing Page) */}
+      {/* Light Aurora Glow Backdrop Spots */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute w-[800px] h-[800px] -top-[300px] -left-[200px] bg-orange-100/30 rounded-full blur-3xl" />
         <div className="absolute w-[600px] h-[600px] top-[40%] -right-[300px] bg-amber-100/20 rounded-full blur-3xl" />
@@ -75,7 +101,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onBack }) =>
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative z-10 w-full max-w-[420px] mx-4 p-8 sm:p-10 rounded-[24px] bg-white border border-slate-200/60 shadow-xl flex flex-col items-center"
       >
-
         <div className="text-center mb-8">
           <h1 className="font-dm-sans font-light text-4xl tracking-tight text-slate-900 select-none">
             Prof. Ada
@@ -95,6 +120,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onBack }) =>
           </motion.div>
         )}
 
+        {/* Success Message banner */}
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full mb-6 p-3.5 rounded-xl bg-emerald-50 border border-emerald-100 flex items-start gap-2.5 text-xs text-emerald-700"
+          >
+            <CheckCircle size={15} className="mt-0.5 flex-shrink-0" />
+            <span>{successMessage}</span>
+          </motion.div>
+        )}
+
         {/* Google Authentication Option */}
         <button
           onClick={handleGoogleLogin}
@@ -102,10 +139,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onBack }) =>
           className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group active:scale-[0.98]"
         >
           {isGoogleLoading ? (
-            <svg className="animate-spin h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
+            <Loader2 className="animate-spin h-5 w-5 text-slate-400" />
           ) : (
             <svg className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" viewBox="0 0 24 24">
               <path
@@ -150,22 +184,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onBack }) =>
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="student.name@example.com"
-              disabled={isGoogleLoading || isEmailLoading}
+              disabled={isGoogleLoading || isEmailLoading || !!successMessage}
               className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/40 focus:border-orange-500/80 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
           <button
             type="submit"
-            disabled={isGoogleLoading || isEmailLoading}
+            disabled={isGoogleLoading || isEmailLoading || !!successMessage}
             className="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-sm transition-all duration-300 shadow-md active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isEmailLoading ? (
               <>
-                <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
+                <Loader2 className="animate-spin h-5 w-5 text-white" />
                 <span>Sending magic link...</span>
               </>
             ) : (
