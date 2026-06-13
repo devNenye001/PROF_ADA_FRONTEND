@@ -54,9 +54,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   };
 
+  const googleInitialized = React.useRef(false);
+
   useEffect(() => {
     const initializeGoogle = () => {
-      if (window.google) {
+      if (window.google && !googleInitialized.current) {
+        googleInitialized.current = true;
         window.google.accounts.id.initialize({
           client_id: "768174706709-btt2aj8hq0cdarr69d717l7u4e2oieqi.apps.googleusercontent.com",
           callback: handleCredentialResponse,
@@ -77,7 +80,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
     if (window.google) {
       initializeGoogle();
-    } else {
+    } else if (!document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
       const script = document.createElement("script");
       script.src = "https://accounts.google.com/gsi/client";
       script.async = true;
@@ -86,17 +89,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       document.head.appendChild(script);
     }
   }, []);
-
-  const handleDevBypass = () => {
-    setIsGoogleLoading(true);
-    setError(null);
-    setTimeout(() => {
-      setIsGoogleLoading(false);
-      const mockAccessToken = "mock_google_access_token_" + Date.now();
-      const mockRefreshToken = "mock_google_refresh_token_" + Date.now();
-      onLoginSuccess("student@university.edu", mockAccessToken, mockRefreshToken);
-    }, 800);
-  };
 
   return (
     <div className="fixed inset-0 h-screen w-screen bg-slate-50 text-slate-900 flex items-center justify-center overflow-hidden z-50 font-sans">
@@ -154,16 +146,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             </div>
           )}
         </div>
-
-        {/* Developer Offline Bypass Option (Only on localhost) */}
-        {window.location.hostname === "localhost" && (
-          <button
-            onClick={handleDevBypass}
-            className="mt-6 text-[11px] font-medium text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/60 px-3 py-1.5 rounded-lg transition-all duration-300 active:scale-95"
-          >
-            Dev Bypass (Local Mock Auth)
-          </button>
-        )}
 
         {/* Integrity Notice */}
         <p className="text-[10px] text-slate-400 text-center mt-8 font-light select-none leading-relaxed">

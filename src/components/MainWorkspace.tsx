@@ -173,9 +173,28 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
 
     try {
       if (file) {
-        if (!activeProjectId) {
-          alert("Please select or create an active project in the Projects tab before uploading documents.");
-          return;
+        let currentProjectId = activeProjectId;
+        
+        // Auto-create a project if none is selected
+        if (!currentProjectId) {
+          try {
+            const projRes = await api.post("/projects", {
+              title: "General Workspace",
+              description: "Automatically created workspace for documents.",
+            });
+            if (projRes.data.success) {
+              currentProjectId = projRes.data.data.id;
+              setActiveProjectId(currentProjectId);
+              localStorage.setItem("prof-ada-active-project-id", currentProjectId);
+              setProjects((prev) => [projRes.data.data, ...prev]);
+            } else {
+              throw new Error("Failed to create default project");
+            }
+          } catch (err) {
+            console.error("Auto-create project error:", err);
+            alert("Could not create a workspace for your document. Please create a project manually.");
+            return;
+          }
         }
 
         // 1. Process base64 file upload
@@ -189,7 +208,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
         formData.append("title", file.name);
         formData.append("type", type);
 
-        const uploadRes = await api.post(`/projects/${activeProjectId}/documents/upload`, formData, {
+        const uploadRes = await api.post(`/projects/${currentProjectId}/documents/upload`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
 
