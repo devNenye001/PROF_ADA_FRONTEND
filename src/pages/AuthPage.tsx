@@ -22,6 +22,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 }) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
+  const [email, setEmail] = useState("");
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Sync initial error prop
   useEffect(() => {
@@ -30,10 +33,27 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   }, [initialError]);
 
-  const handleCredentialResponse = () => {
-    // Left empty intentionally: Google Sign-in now redirects directly to the backend
-    // This allows the auth flow to bypass strict popup blockers on mobile devices
-    setIsGoogleLoading(true);
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsEmailLoading(true);
+    setError(null);
+
+    try {
+      const res = await api.post("/auth/email/magic-link", { email });
+      if (res.data && res.data.success) {
+        setEmailSent(true);
+      } else {
+        setError("Failed to send magic link. Please try again.");
+      }
+    } catch (err: any) {
+      console.error("Magic link error:", err);
+      const msg = err.response?.data?.error?.message || "Could not connect to authentication server.";
+      setError(msg);
+    } finally {
+      setIsEmailLoading(false);
+    }
   };
 
   const googleInitialized = React.useRef(false);
@@ -125,10 +145,44 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           {isGoogleLoading && (
             <div className="flex items-center gap-2 text-xs text-slate-500 font-light mt-2">
               <Loader2 className="animate-spin h-4 w-4 text-orange-500" />
-              <span>Verifying credentials...</span>
+              <span>Redirecting to Google...</span>
             </div>
           )}
         </div>
+
+        {/* Divider */}
+        <div className="w-full flex items-center gap-4 my-6 opacity-60">
+          <div className="h-[1px] flex-1 bg-slate-300"></div>
+          <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">or continue with email</span>
+          <div className="h-[1px] flex-1 bg-slate-300"></div>
+        </div>
+
+        {/* Email Magic Link Option */}
+        {emailSent ? (
+          <div className="w-full p-4 rounded-xl bg-green-50/80 border border-green-200 text-sm text-green-800 text-center shadow-sm">
+            A magic login link has been sent to <br /><strong>{email}</strong><br />
+            <span className="block mt-2 text-xs font-light text-green-700">Please check your inbox (and spam folder) to sign in.</span>
+          </div>
+        ) : (
+          <form className="w-full flex flex-col gap-3" onSubmit={handleEmailLogin}>
+            <input 
+              type="email" 
+              placeholder="student@university.edu" 
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-sm shadow-sm"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
+            <button 
+              type="submit"
+              disabled={isEmailLoading || !email}
+              className="w-full py-3 rounded-xl bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-sm active:scale-[0.98]"
+            >
+              {isEmailLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              <span>Send Magic Link</span>
+            </button>
+          </form>
+        )}
 
         {/* Integrity Notice */}
         <p className="text-[10px] text-slate-400 text-center mt-8 font-light select-none leading-relaxed">
