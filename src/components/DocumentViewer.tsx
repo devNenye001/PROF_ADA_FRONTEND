@@ -41,23 +41,8 @@ Review relevant papers and studies in your field.
     null,
   );
 
-  const mockHighlights: Highlight[] = [
-    {
-      id: "1",
-      lineNumber: 5,
-      text: "This is your document content...",
-      type: "suggestion",
-      message: "Consider adding more specific context here",
-    },
-    {
-      id: "2",
-      lineNumber: 12,
-      text: "State your research question...",
-      type: "warning",
-      message:
-        "Your research question needs to be more specific and measurable",
-    },
-  ];
+  const highlights = document?.highlights || [];
+  const displayContent = document?.content || content || "No text could be extracted from this document.";
 
   return (
     <AnimatePresence>
@@ -129,11 +114,11 @@ Review relevant papers and studies in your field.
                                 (document?.name && /\.(png|jpe?g|gif|webp|svg)$/i.test(document.name)) ||
                                 document?.dataUrl?.startsWith("data:image/");
 
-                let displayContent = content;
+                let innerDisplayContent = document?.content || content || "No text available.";
                 if (document?.dataUrl && document.dataUrl.startsWith("data:text/")) {
                   try {
                     const base64Data = document.dataUrl.split(",")[1];
-                    displayContent = atob(base64Data);
+                    innerDisplayContent = atob(base64Data);
                   } catch (e) {
                     console.error("Failed to decode text document", e);
                   }
@@ -163,8 +148,8 @@ Review relevant papers and studies in your field.
 
                 return (
                   <div className="prose max-w-none mb-6 text-sm">
-                    {displayContent.split("\n").map((line, idx) => {
-                      const highlight = mockHighlights.find(
+                    {innerDisplayContent.split("\n").map((line, idx) => {
+                      const highlight = highlights.find(
                         (h) => h.lineNumber === idx,
                       );
                       return (
@@ -227,7 +212,7 @@ Review relevant papers and studies in your field.
                   Review Summary
                 </h3>
                 <div className="space-y-2">
-                  {mockHighlights.map((highlight) => (
+                  {highlights.map((highlight) => (
                     <div
                       key={highlight.id}
                       className="text-xs p-3 rounded-lg bg-slate-50 border border-slate-200 shadow-sm"

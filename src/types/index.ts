@@ -29,6 +29,7 @@ export interface Document {
   highlights?: Highlight[];
   dataUrl?: string;
   fileUrl?: string;
+  content?: string;
 }
 
 export interface Highlight {

@@ -104,6 +104,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
           type: "docx" as const,
           uploadedAt: new Date(d.createdAt),
           fileUrl: d.fileUrl,
+          content: d.extractedText,
         }));
         const slides = slideRes.data.data.map((s: any) => ({
           id: s.id,
@@ -111,6 +112,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
           type: "pptx" as const,
           uploadedAt: new Date(s.createdAt),
           fileUrl: s.fileUrl,
+          content: s.extractedText,
         }));
         setDocuments([...docs, ...slides]);
       })
@@ -316,8 +318,41 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
     }
   };
 
-  const handleSelectDocument = (doc: Document) => {
-    setSelectedDocument(doc);
+  const handleSelectDocument = async (doc: Document) => {
+    try {
+      const feedbackRes = await api.get(`/documents/${doc.id}/feedback`);
+      if (feedbackRes.data.success) {
+        const highlights = feedbackRes.data.data.map((f: any, index: number) => {
+          const matchQuote = f.content.match(/Quote:\s*"([^"]*)"/);
+          const matchIssue = f.content.match(/Issue:\s*(.*)/);
+          const matchHint = f.content.match(/Hint:\s*(.*)/);
+          
+          let lineNumber = -1;
+          const quote = matchQuote ? matchQuote[1] : null;
+          if (quote && doc.content) {
+            const lines = doc.content.split('\\n');
+            lineNumber = lines.findIndex((l: string) => l.includes(quote.substring(0, 50)) || quote.includes(l.trim()));
+          }
+          
+          return {
+            id: f.id || String(index),
+            lineNumber: lineNumber,
+            text: matchQuote ? matchQuote[1] : "General feedback",
+            type: (f.severity === 'HIGH' || f.severity === 'CRITICAL') ? 'warning' : 'suggestion',
+            message: `${matchIssue ? matchIssue[1] : f.content}\\n${matchHint ? matchHint[1] : ''}`
+          };
+        });
+        
+        const docWithFeedback = { ...doc, highlights };
+        setSelectedDocument(docWithFeedback);
+      } else {
+        setSelectedDocument(doc);
+      }
+    } catch (err) {
+      console.error("Failed to fetch feedback", err);
+      setSelectedDocument(doc);
+    }
+
     setIsDocViewerOpen(true);
     if (activeTab === "settings" || activeTab === "files" || activeTab === "projects") {
       setActiveTab("chat");
