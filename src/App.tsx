@@ -26,13 +26,38 @@ export const App: React.FC = () => {
     }
   }, [appState]);
 
-  // Check if user is already logged in on mount
+  // Check if user is already logged in on mount, or if returning from Google Auth Redirect
   useEffect(() => {
-    const storedEmail = localStorage.getItem("prof-ada-user-email");
-    const accessToken = localStorage.getItem("prof-ada-access-token");
-    if (storedEmail && accessToken) {
-      setUserEmail(storedEmail);
+    const params = new URLSearchParams(window.location.search);
+    const urlAccessToken = params.get("accessToken");
+    const urlRefreshToken = params.get("refreshToken");
+    const urlEmail = params.get("email");
+    const urlError = params.get("error");
+
+    if (urlAccessToken && urlRefreshToken && urlEmail) {
+      // Successfully redirected from Google Auth
+      localStorage.setItem("prof-ada-access-token", urlAccessToken);
+      localStorage.setItem("prof-ada-refresh-token", urlRefreshToken);
+      localStorage.setItem("prof-ada-user-email", urlEmail);
+      
+      setUserEmail(urlEmail);
       setAppState("workspace");
+      
+      // Clean up the URL so tokens aren't visible
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlError) {
+      // Show error and clean URL
+      setVerificationError(`Authentication failed: ${urlError.replace(/_/g, " ")}`);
+      setAppState("auth");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+      // Normal flow: check localStorage
+      const storedEmail = localStorage.getItem("prof-ada-user-email");
+      const accessToken = localStorage.getItem("prof-ada-access-token");
+      if (storedEmail && accessToken) {
+        setUserEmail(storedEmail);
+        setAppState("workspace");
+      }
     }
   }, []);
 

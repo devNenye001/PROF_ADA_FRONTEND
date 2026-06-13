@@ -30,28 +30,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   }, [initialError]);
 
-  const handleCredentialResponse = async (response: any) => {
-    const idToken = response.credential;
-    if (!idToken) return;
-
+  const handleCredentialResponse = () => {
+    // Left empty intentionally: Google Sign-in now redirects directly to the backend
+    // This allows the auth flow to bypass strict popup blockers on mobile devices
     setIsGoogleLoading(true);
-    setError(null);
-
-    try {
-      const res = await api.post("/auth/google", { idToken });
-      if (res.data && res.data.success) {
-        const { user, accessToken, refreshToken } = res.data.data;
-        onLoginSuccess(user.email, accessToken, refreshToken);
-      } else {
-        setError("Failed to authenticate with Google. Please try again.");
-      }
-    } catch (err: any) {
-      console.error("Google login backend error:", err);
-      const msg = err.response?.data?.error?.message || "Could not connect to authentication server.";
-      setError(msg);
-    } finally {
-      setIsGoogleLoading(false);
-    }
   };
 
   const googleInitialized = React.useRef(false);
@@ -60,10 +42,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     const initializeGoogle = () => {
       if (window.google && !googleInitialized.current) {
         googleInitialized.current = true;
+        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
         window.google.accounts.id.initialize({
           client_id: "768174706709-btt2aj8hq0cdarr69d717l7u4e2oieqi.apps.googleusercontent.com",
-          callback: handleCredentialResponse,
-          auto_select: false,
+          ux_mode: "redirect",
+          login_uri: `${API_BASE_URL}/auth/google/callback`,
         });
         const container = document.getElementById("google-signin-btn");
         if (container) {
