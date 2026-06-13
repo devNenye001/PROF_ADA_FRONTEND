@@ -6,6 +6,7 @@ import { MainWorkspace } from "./components/MainWorkspace";
 import { OnboardingWizard } from "./components/OnboardingWizard";
 import { api } from "./utils/api";
 import { Loader2 } from "lucide-react";
+import { supabase } from "./utils/supabase";
 import "./styles/global.css";
 
 type AppState = "landing" | "auth" | "workspace";
@@ -26,39 +27,55 @@ export const App: React.FC = () => {
     }
   }, [appState]);
 
-  // Check if user is already logged in on mount, or if returning from Google Auth Redirect
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlAccessToken = params.get("accessToken");
-    const urlRefreshToken = params.get("refreshToken");
-    const urlEmail = params.get("email");
-    const urlError = params.get("error");
 
-    if (urlAccessToken && urlRefreshToken && urlEmail) {
-      // Successfully redirected from Google Auth
-      localStorage.setItem("prof-ada-access-token", urlAccessToken);
-      localStorage.setItem("prof-ada-refresh-token", urlRefreshToken);
-      localStorage.setItem("prof-ada-user-email", urlEmail);
-      
-      setUserEmail(urlEmail);
+
+  // Check if user is already logged in on mount, or handle Supabase auth
+  useEffect(() => {
+    // Normal flow: check localStorage for backend JWT
+    const storedEmail = localStorage.getItem("prof-ada-user-email");
+    const accessToken = localStorage.getItem("prof-ada-access-token");
+    if (storedEmail && accessToken) {
+      setUserEmail(storedEmail);
       setAppState("workspace");
-      
-      // Clean up the URL so tokens aren't visible
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (urlError) {
-      // Show error and clean URL
-      setVerificationError(`Authentication failed: ${urlError.replace(/_/g, " ")}`);
-      setAppState("auth");
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else {
-      // Normal flow: check localStorage
-      const storedEmail = localStorage.getItem("prof-ada-user-email");
-      const accessToken = localStorage.getItem("prof-ada-access-token");
-      if (storedEmail && accessToken) {
-        setUserEmail(storedEmail);
-        setAppState("workspace");
-      }
     }
+
+    // Listen for Supabase auth events (OAuth or Magic Link redirects)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setIsVerifying(true);
+        try {
+          // Exchange Supabase token for Backend JWT
+          const res = await api.post("/auth/supabase", { access_token: session.access_token });
+          if (res.data && res.data.success) {
+            const { user, accessToken, refreshToken } = res.data.data;
+            
+            localStorage.setItem("prof-ada-access-token", accessToken);
+            localStorage.setItem("prof-ada-refresh-token", refreshToken);
+            localStorage.setItem("prof-ada-user-email", user.email);
+            
+            setUserEmail(user.email);
+            setAppState("workspace");
+            setVerificationError(null);
+            
+            // Clean up the URL hash left by Supabase
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            throw new Error("Backend authentication failed.");
+          }
+        } catch (err: any) {
+          console.error("Backend Supabase sync error:", err);
+          setVerificationError(err.response?.data?.error?.message || "Verification failed. Please try again.");
+          setAppState("auth");
+          await supabase.auth.signOut();
+        } finally {
+          setIsVerifying(false);
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Listen for logout events from the API client to transition state gracefully without page refresh
