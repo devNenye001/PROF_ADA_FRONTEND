@@ -35,18 +35,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({ 
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        }
-      });
-      
-      if (error) throw error;
-      setEmailSent(true);
+      // Using our custom backend instead of Supabase so we have full control over the email template
+      // without needing to set up a custom SMTP server in Supabase!
+      const res = await api.post("/auth/email/magic-link", { email });
+      if (res.data && res.data.success) {
+        setEmailSent(true);
+      } else {
+        setError("Failed to send magic link. Please try again.");
+      }
     } catch (err: any) {
-      console.error("Supabase magic link error:", err);
-      setError(err.message || "Failed to send magic link.");
+      console.error("Magic link error:", err);
+      const msg = err.response?.data?.error?.message || "Could not connect to authentication server.";
+      setError(msg);
     } finally {
       setIsEmailLoading(false);
     }
