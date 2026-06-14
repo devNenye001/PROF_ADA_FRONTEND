@@ -29,47 +29,31 @@ export const App: React.FC = () => {
 
 
 
-  // Check if user is already logged in on mount, or handle Supabase auth
+  // Supabase session handling
   useEffect(() => {
-    // Normal flow: check localStorage for backend JWT
-    const storedEmail = localStorage.getItem("prof-ada-user-email");
-    const accessToken = localStorage.getItem("prof-ada-access-token");
-    if (storedEmail && accessToken) {
-      setUserEmail(storedEmail);
-      setAppState("workspace");
-    }
+    // Check initial session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+        setAppState("workspace");
+        // We still put it in localStorage so the API interceptor easily grabs it
+        localStorage.setItem("prof-ada-access-token", session.access_token);
+      }
+    });
 
-    // Listen for Supabase auth events (OAuth or Magic Link redirects)
+    // Listen for Supabase auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setIsVerifying(true);
-        try {
-          // Exchange Supabase token for Backend JWT
-          const res = await api.post("/auth/supabase", { access_token: session.access_token });
-          if (res.data && res.data.success) {
-            const { user, accessToken, refreshToken } = res.data.data;
-            
-            localStorage.setItem("prof-ada-access-token", accessToken);
-            localStorage.setItem("prof-ada-refresh-token", refreshToken);
-            localStorage.setItem("prof-ada-user-email", user.email);
-            
-            setUserEmail(user.email);
-            setAppState("workspace");
-            setVerificationError(null);
-            
-            // Clean up the URL hash left by Supabase
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } else {
-            throw new Error("Backend authentication failed.");
-          }
-        } catch (err: any) {
-          console.error("Backend Supabase sync error:", err);
-          setVerificationError(err.response?.data?.error?.message || "Verification failed. Please try again.");
-          setAppState("auth");
-          await supabase.auth.signOut();
-        } finally {
-          setIsVerifying(false);
-        }
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user?.email) {
+        localStorage.setItem("prof-ada-access-token", session.access_token);
+        setUserEmail(session.user.email);
+        setAppState("workspace");
+        setVerificationError(null);
+        // Clean up the URL hash left by Supabase OAuth
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (event === 'SIGNED_OUT') {
+        localStorage.removeItem("prof-ada-access-token");
+        setUserEmail(null);
+        setAppState("landing");
       }
     });
 
