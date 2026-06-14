@@ -83,8 +83,6 @@ export const App: React.FC = () => {
     localStorage.setItem("prof-ada-user-email", email);
     
     setUserEmail(email);
-    localStorage.removeItem("prof-ada-onboarding");
-    setShowOnboarding(true);
     setAppState("workspace");
   };
 
@@ -92,7 +90,6 @@ export const App: React.FC = () => {
     localStorage.removeItem("prof-ada-access-token");
     localStorage.removeItem("prof-ada-refresh-token");
     localStorage.removeItem("prof-ada-user-email");
-    localStorage.removeItem("prof-ada-onboarding");
     localStorage.removeItem("prof-ada-active-conversation-id");
     
     setUserEmail(null);

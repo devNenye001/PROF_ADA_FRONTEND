@@ -112,7 +112,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             Prof. Ada
           </h1>
           <p className="text-sm text-slate-500 mt-2 font-light">
-            {isSignUp ? "Create your academic workspace" : "Welcome back, student"}
+            {isSignUp ? "Create your academic workspace" : "Welcome back"}
           </p>
         </div>
 
