@@ -187,7 +187,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
             if (projRes.data.success) {
               currentProjectId = projRes.data.data.id;
               setActiveProjectId(currentProjectId);
-              localStorage.setItem("prof-ada-active-project-id", currentProjectId);
+              localStorage.setItem("prof-ada-active-project-id", currentProjectId as string);
               setProjects((prev) => [projRes.data.data, ...prev]);
             } else {
               throw new Error("Failed to create default project");
