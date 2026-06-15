@@ -14,13 +14,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 }) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
-  
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [verifyEmailSent, setVerifyEmailSent] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  // Only keeping Google auth for now
 
   // Sync initial error prop
   useEffect(() => {
@@ -29,36 +23,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   }, [initialError]);
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) return;
-
-    setIsEmailLoading(true);
-    setError(null);
-
-    try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        setVerifyEmailSent(true);
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        // App.tsx handles the successful login via onAuthStateChange
-      }
-    } catch (err: any) {
-      console.error("Supabase auth error:", err);
-      setError(err.message || "Authentication failed.");
-    } finally {
-      setIsEmailLoading(false);
-    }
-  };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
@@ -113,7 +77,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             Prof. Ada
           </h1>
           <p className="text-sm text-slate-500 mt-2 font-light">
-            {isSignUp ? "Create your academic workspace" : "Welcome back"}
+            Welcome to your academic workspace
           </p>
         </div>
 
@@ -156,67 +120,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           </button>
         </div>
 
-        {/* Divider */}
-        <div className="w-full flex items-center gap-4 my-6 opacity-60">
-          <div className="h-[1px] flex-1 bg-slate-300"></div>
-          <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">or continue with email</span>
-          <div className="h-[1px] flex-1 bg-slate-300"></div>
-        </div>
 
-        {/* Email/Password Option */}
-        {verifyEmailSent ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full p-4 rounded-xl bg-green-50/80 border border-green-200 text-sm text-green-800 text-center shadow-sm">
-            Please check your inbox <br /><strong>{email}</strong><br />
-            <span className="block mt-2 text-xs font-light text-green-700">Click the confirmation link to activate your account.</span>
-          </motion.div>
-        ) : (
-          <form className="w-full flex flex-col gap-3" onSubmit={handleEmailAuth}>
-            <input
-              type="email"
-              placeholder="student@university.edu"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-sm shadow-sm"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-            <div className="relative w-full">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-sm shadow-sm"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <button
-              type="submit"
-              disabled={isEmailLoading || !email || !password}
-              className="w-full mt-2 py-3 rounded-xl bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-sm active:scale-[0.98]"
-            >
-              {isEmailLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              <span>{isSignUp ? "Create Account" : "Sign In"}</span>
-            </button>
-            
-            <div className="mt-4 text-center">
-              <button 
-                type="button" 
-                onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-                className="text-xs text-slate-500 hover:text-slate-800 transition-colors"
-              >
-                {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign up"}
-              </button>
-            </div>
-          </form>
-        )}
 
         {/* Integrity Notice */}
         <p className="text-[10px] text-slate-400 text-center mt-8 font-light select-none leading-relaxed">
