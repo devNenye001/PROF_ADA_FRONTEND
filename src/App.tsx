@@ -77,15 +77,6 @@ export const App: React.FC = () => {
     setAppState("auth");
   };
 
-  const handleLoginSuccess = (email: string, accessToken: string, refreshToken: string) => {
-    localStorage.setItem("prof-ada-access-token", accessToken);
-    localStorage.setItem("prof-ada-refresh-token", refreshToken);
-    localStorage.setItem("prof-ada-user-email", email);
-    
-    setUserEmail(email);
-    setAppState("workspace");
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("prof-ada-access-token");
     localStorage.removeItem("prof-ada-refresh-token");
@@ -116,7 +107,6 @@ export const App: React.FC = () => {
           />
         ) : appState === "auth" ? (
           <AuthPage
-            onLoginSuccess={handleLoginSuccess}
             onBack={() => {
               setVerificationError(null);
               setAppState("landing");
