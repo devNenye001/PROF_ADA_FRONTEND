@@ -6,15 +6,11 @@ import { useSpeechToText } from "../utils/ai";
 interface InputCapsuleProps {
   onSendMessage: (message: string, file?: { name: string; type: string; dataUrl: string }) => void;
   isLoading?: boolean;
-  contextMode: string;
-  onContextModeChange: (mode: string) => void;
 }
 
 export const InputCapsule: React.FC<InputCapsuleProps> = ({
   onSendMessage,
   isLoading = false,
-  contextMode,
-  onContextModeChange,
 }) => {
   const [message, setMessage] = useState("");
   const [isListening, setIsListening] = useState(false);

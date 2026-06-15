@@ -45,8 +45,6 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
   const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | undefined>();
   const [activeTab, setActiveTab] = useState<SidebarTab>("chat");
-  const [contextMode, setContextMode] = useState("topic-discovery");
-  const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
 
@@ -237,7 +235,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
         // Send typical text message to conversation messages array
         const res = await api.post(`/conversations/${convId}/messages`, {
           content: messageText,
-          mode: contextMode
+          mode: "chat"
         });
 
         if (res.data.success) {
@@ -584,8 +582,6 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
         <InputCapsule 
           onSendMessage={handleSendMessage} 
           isLoading={isLoading} 
-          contextMode={contextMode}
-          onContextModeChange={setContextMode}
         />
       </div>
     );
@@ -657,38 +653,9 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
             </button>
             <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse hidden md:inline-block shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
             {activeTab === "chat" ? (
-              <div className="relative">
-                <button
-                  onClick={() => setShowModeDropdown(!showModeDropdown)}
-                  className="flex items-center gap-2 hover:bg-slate-100/50 px-2 py-1.5 rounded-lg transition-colors border border-transparent hover:border-slate-200"
-                >
-                  <h1 className="font-dm-sans text-base font-normal tracking-wide text-slate-900">
-                    {CONTEXT_MODES.find((m) => m.id === contextMode)?.label || "Supervision Workspace"}
-                  </h1>
-                  <ChevronDown size={14} className="text-slate-400" />
-                </button>
-                
-                {showModeDropdown && (
-                  <div className="absolute top-full left-0 mt-1 w-64 p-2 bg-white/80 backdrop-blur-md rounded-xl shadow-xl border border-slate-200/50 z-50 animate-in fade-in slide-in-from-top-1 duration-200">
-                    {CONTEXT_MODES.map((mode) => (
-                      <button
-                        key={mode.id}
-                        onClick={() => {
-                          setContextMode(mode.id);
-                          setShowModeDropdown(false);
-                        }}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
-                          contextMode === mode.id
-                            ? "bg-orange-500/10 text-orange-700 font-semibold border-l-2 border-orange-500"
-                            : "hover:bg-slate-100/50 text-slate-600"
-                        }`}
-                      >
-                        <div className="text-sm">{mode.label}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <h1 className="font-dm-sans text-base font-normal tracking-wide text-slate-900">
+                Supervision Workspace
+              </h1>
             ) : (
               <h1 className="font-dm-sans text-base font-normal tracking-wide text-slate-900">
                 {activeTab === "files" ? "Document Library" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
@@ -706,15 +673,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
                 <span>Project: {activeProject.title}</span>
               </div>
             )}
-            {activeTab === "chat" && contextMode !== "topic-discovery" && contextMode !== "research-guidance" && (
-              <button
-                onClick={() => setContextMode("topic-discovery")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs transition-colors shadow-sm"
-              >
-                <MessageSquare size={14} />
-                Return to Chat
-              </button>
-            )}
+
           </div>
         </div>
 
