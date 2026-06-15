@@ -563,13 +563,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
       );
     }
 
-    if (contextMode === "chapter-review") {
-      return <ProjectReviewWorkspace document={selectedDocument} />;
-    }
 
-    if (contextMode === "slide-review") {
-      return <SlideReviewWorkspace document={selectedDocument} />;
-    }
 
     // Default chat view
     return (
