@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../utils/supabase";
 
 interface AuthPageProps {
@@ -20,6 +20,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Sync initial error prop
   useEffect(() => {
@@ -178,15 +179,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               onChange={e => setEmail(e.target.value)}
               required
             />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-sm shadow-sm"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+            <div className="relative w-full">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-sm shadow-sm"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <button
               type="submit"
               disabled={isEmailLoading || !email || !password}
