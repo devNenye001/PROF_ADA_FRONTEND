@@ -15,7 +15,7 @@ export const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>("landing");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true); // Default to true while checking session
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
   // Check if user has seen onboarding
@@ -33,19 +33,19 @@ export const App: React.FC = () => {
   useEffect(() => {
     // Check initial session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
+      if (session?.user) {
+        setUserEmail(session.user.email || "student@university.edu");
         setAppState("workspace");
-        // We still put it in localStorage so the API interceptor easily grabs it
         localStorage.setItem("prof-ada-access-token", session.access_token);
       }
+      setIsVerifying(false);
     });
 
     // Listen for Supabase auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user?.email) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         localStorage.setItem("prof-ada-access-token", session.access_token);
-        setUserEmail(session.user.email);
+        setUserEmail(session.user.email || "student@university.edu");
         setAppState("workspace");
         setVerificationError(null);
         // Clean up the URL hash left by Supabase OAuth
@@ -95,11 +95,7 @@ export const App: React.FC = () => {
       <div className="relative z-10 h-full">
         {isVerifying ? (
           <div className="h-full w-full flex flex-col items-center justify-center gap-4 text-center font-sans">
-            <div className="p-8 rounded-[24px] bg-white border border-slate-200/60 shadow-xl max-w-sm mx-4 flex flex-col items-center">
-              <Loader2 className="w-8 h-8 text-orange-500 animate-spin mb-4" />
-              <h1 className="font-dm-sans text-xl font-light text-slate-900 mb-2">Verifying Link</h1>
-              <p className="text-sm text-slate-500 font-light">Confirming your academic credentials. Please wait a moment...</p>
-            </div>
+            <Loader2 className="w-8 h-8 text-orange-500 animate-spin mb-4" />
           </div>
         ) : appState === "landing" ? (
           <LandingPage 
