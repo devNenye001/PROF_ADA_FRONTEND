@@ -21,6 +21,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [isVoicePlaying, setIsVoicePlaying] = useState(false);
   const [voiceProgress, setVoiceProgress] = useState(35);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', email: '', category: 'General Inquiry', message: '' });
+  const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactForm.name || !contactForm.email || !contactForm.message) return;
+    setContactStatus('loading');
+    try {
+      // Need to import api if not imported, wait, let me check imports. It's not imported.
+      // Wait, I will use fetch to the correct backend url. 
+      // Actually, api is in ../utils/api, let me import it.
+      const { api } = await import('../utils/api');
+      await api.post('/contact', contactForm);
+      setContactStatus('success');
+      setContactForm({ name: '', email: '', category: 'General Inquiry', message: '' });
+      setTimeout(() => setContactStatus('idle'), 4000);
+    } catch (err) {
+      console.error(err);
+      setContactStatus('idle');
+    }
+  };
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -31,7 +52,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     { label: "Features", href: "#features" },
     { label: "How It Works", href: "#how-it-works" },
     { label: "Voice Mode", href: "#voice-mode" },
-    { label: "FAQ", href: "#faq" }
+    { label: "FAQ", href: "#faq" },
+    { label: "Contact", href: "#contact" }
   ];
 
   const faqs = [
@@ -681,6 +703,87 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
+      {/* CONTACT SECTION */}
+      <section id="contact" className="relative z-10 py-20 px-6 max-w-4xl mx-auto space-y-12">
+        <div className="text-center space-y-4">
+          <span className="text-[10px] uppercase font-bold tracking-widest text-orange-600">Get in Touch</span>
+          <h2 className="text-3xl font-light text-slate-900 tracking-tight">Contact Our Team</h2>
+          <p className="text-sm text-slate-600 max-w-lg mx-auto">Have a question or need priority support? Drop us a message.</p>
+        </div>
+
+        <div className="bg-white/60 backdrop-blur-md border border-slate-200/60 rounded-2xl p-6 sm:p-10 shadow-sm relative overflow-hidden">
+          {contactStatus === 'success' && (
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">
+              <CheckCircle className="w-12 h-12 text-emerald-500 mb-4" />
+              <h3 className="text-xl font-light text-slate-900 mb-2">Message Sent</h3>
+              <p className="text-sm text-slate-500 max-w-xs">We've received your message and will get back to you shortly.</p>
+            </div>
+          )}
+
+          <form onSubmit={handleContactSubmit} className="space-y-6 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Name</label>
+                <input 
+                  type="text" 
+                  required
+                  value={contactForm.name}
+                  onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full bg-white/50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 rounded-xl px-4 py-3 text-sm text-slate-800 transition-all outline-none"
+                  placeholder="Your name"
+                />
+              </div>
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email</label>
+                <input 
+                  type="email" 
+                  required
+                  value={contactForm.email}
+                  onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full bg-white/50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 rounded-xl px-4 py-3 text-sm text-slate-800 transition-all outline-none"
+                  placeholder="you@university.edu"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
+              <select 
+                value={contactForm.category}
+                onChange={e => setContactForm(prev => ({ ...prev, category: e.target.value }))}
+                className="w-full bg-white/50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 rounded-xl px-4 py-3 text-sm text-slate-800 transition-all outline-none"
+              >
+                <option>General</option>
+                <option>Bug Report</option>
+                <option>Feature Request</option>
+                <option>Partnership</option>
+                <option>Academic Question</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Message</label>
+              <textarea 
+                required
+                rows={4}
+                value={contactForm.message}
+                onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                className="w-full bg-white/50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 rounded-xl px-4 py-3 text-sm text-slate-800 transition-all outline-none resize-none"
+                placeholder="How can we help?"
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={contactStatus === 'loading'}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              {contactStatus === 'loading' ? 'Sending...' : 'Send Message'}
+            </button>
+          </form>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="relative z-10 border-t border-slate-100 bg-white py-8 px-6 overflow-hidden">
         {/* Subtle orange accent glow behind footer */}
@@ -708,6 +811,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-orange-500 transition-all duration-300 group-hover:w-full" />
                 </a>
               ))}
+              <a href="#contact" className="hover:text-slate-950 transition-colors relative py-0.5 group">
+                Support
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-orange-500 transition-all duration-300 group-hover:w-full" />
+              </a>
+              <a href="#" className="hover:text-slate-950 transition-colors relative py-0.5 group">
+                Terms
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-orange-500 transition-all duration-300 group-hover:w-full" />
+              </a>
+              <a href="#" className="hover:text-slate-950 transition-colors relative py-0.5 group">
+                Privacy
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-orange-500 transition-all duration-300 group-hover:w-full" />
+              </a>
             </div>
           </div>
 

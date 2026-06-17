@@ -86,7 +86,7 @@ export const InputCapsule: React.FC<InputCapsuleProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="p-4 border-t border-slate-100 bg-white/80 backdrop-blur-md flex justify-center w-full flex-shrink-0"
+      className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-100 bg-white/80 backdrop-blur-md flex justify-center w-full flex-shrink-0 sticky bottom-0 z-20"
     >
       <div className="w-full max-w-3xl flex items-end gap-2.5 bg-slate-50 hover:bg-slate-100/60 focus-within:bg-white focus-within:ring-1 focus-within:ring-orange-500/20 border border-slate-200/80 focus-within:border-orange-500/50 rounded-[24px] px-4 py-2.5 transition-all duration-300 shadow-sm">
         

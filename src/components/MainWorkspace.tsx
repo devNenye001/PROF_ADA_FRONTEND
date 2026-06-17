@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { CONTEXT_MODES } from "../utils/constants";
 import { motion, AnimatePresence } from "framer-motion";
+import { FeatureFeedback } from "./FeatureFeedback";
 
 interface MainWorkspaceProps {
   userEmail: string;
@@ -53,6 +54,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
   const [newProjectTitle, setNewProjectTitle] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [latestFeatureTrigger, setLatestFeatureTrigger] = useState<string | null>(null);
 
   // Load projects on mount
   useEffect(() => {
@@ -229,6 +231,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
           const reviewRes = await api.post(`/documents/${savedDoc.id}/review`, { type });
           if (reviewRes.data.success) {
             handleSelectDocument(newDocItem);
+            setLatestFeatureTrigger(type === "SLIDE" ? 'slide_review' : 'chapter_review');
           }
         }
       } else {
@@ -253,6 +256,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
               return c;
             })
           );
+          setLatestFeatureTrigger('chat_response');
         }
       }
     } catch (err) {
@@ -683,6 +687,13 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({ userEmail, onLogou
           document={selectedDocument}
         />
       </div>
+
+      {latestFeatureTrigger && (
+        <FeatureFeedback 
+          featureType={latestFeatureTrigger} 
+          onClose={() => setLatestFeatureTrigger(null)} 
+        />
+      )}
     </div>
   );
 };
