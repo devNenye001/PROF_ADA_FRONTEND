@@ -4,7 +4,7 @@ import { LandingPage } from "./pages/LandingPage";
 import { AuthPage } from "./pages/AuthPage";
 import { MainWorkspace } from "./components/MainWorkspace";
 import { OnboardingWizard } from "./components/OnboardingWizard";
-import { api } from "./utils/api";
+import { api, setAuthReady } from "./utils/api";
 import { Loader2 } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import "./styles/global.css";
@@ -27,29 +27,43 @@ export const App: React.FC = () => {
     }
   }, [appState]);
 
-
-
   // Supabase session handling
   useEffect(() => {
     // Check initial session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      // If there's clock skew, error might be populated or session null
+      // We also check local storage as fallback for clock skew tolerance
+      const localToken = localStorage.getItem("prof-ada-access-token");
+      
       if (session?.user) {
         setUserEmail(session.user.email || "student@university.edu");
         setAppState("workspace");
         localStorage.setItem("prof-ada-access-token", session.access_token);
+      } else if (localToken) {
+        // Clock skew fallback - if we have a token, assume workspace
+        // the API requests will try to use it
+        setAppState("workspace");
+      } else {
+        setAppState("landing");
       }
+      
       setIsVerifying(false);
+      setAuthReady(true); // Allow queued API requests to proceed
     });
 
     // Listen for Supabase auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
         localStorage.setItem("prof-ada-access-token", session.access_token);
         setUserEmail(session.user.email || "student@university.edu");
         setAppState("workspace");
         setVerificationError(null);
+        setIsVerifying(false);
+        setAuthReady(true);
         // Clean up the URL hash left by Supabase OAuth
-        window.history.replaceState({}, document.title, window.location.pathname);
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       } else if (event === 'SIGNED_OUT') {
         localStorage.removeItem("prof-ada-access-token");
         setUserEmail(null);
